@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          age_range: string | null
+          baseline_notes: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          age_range?: string | null
+          baseline_notes?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          age_range?: string | null
+          baseline_notes?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          blink_rate: number
+          created_at: string
+          fatigue_level: number
+          id: string
+          raw_metrics: Json
+          stress_index: number
+          symmetry_score: number
+          tension_level: number
+          user_id: string
+        }
+        Insert: {
+          blink_rate?: number
+          created_at?: string
+          fatigue_level: number
+          id?: string
+          raw_metrics?: Json
+          stress_index: number
+          symmetry_score: number
+          tension_level: number
+          user_id: string
+        }
+        Update: {
+          blink_rate?: number
+          created_at?: string
+          fatigue_level?: number
+          id?: string
+          raw_metrics?: Json
+          stress_index?: number
+          symmetry_score?: number
+          tension_level?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          reminder_enabled: boolean
+          reminder_time: string
+          theme: string
+          user_id: string
+        }
+        Insert: {
+          reminder_enabled?: boolean
+          reminder_time?: string
+          theme?: string
+          user_id: string
+        }
+        Update: {
+          reminder_enabled?: boolean
+          reminder_time?: string
+          theme?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
