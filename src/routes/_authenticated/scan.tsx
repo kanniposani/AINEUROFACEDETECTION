@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/scan")({
 
 const CONSENT_KEY = "neuroface-camera-consent";
 export const SCAN_RESULT_KEY = "neuroface:last-scan";
-const CAPTURE_MS = 9000;
+const CAPTURE_MS = 10000;
 
 type Phase = "consent" | "idle" | "loading" | "aligning" | "countdown" | "capturing" | "error";
 
@@ -346,7 +346,7 @@ function ScanPage() {
           )}
           {phase === "aligning" && (
             <Button onClick={beginCountdown} className="min-h-11 flex-1 animate-pulse-glow">
-              Begin 9 second scan
+              Begin 10 second scan
             </Button>
           )}
           {(phase === "countdown" || phase === "capturing") && (

@@ -153,7 +153,7 @@ function DashboardPage() {
           <ScanFace className="mx-auto size-10 text-primary" aria-hidden="true" />
           <h1 className="mt-4 text-xl font-semibold">No scans yet</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Take your first 9 second face scan to establish a baseline. Your trend chart appears
+            Take your first 10 second face scan to establish a baseline. Your trend chart appears
             here once you have saved a scan.
           </p>
           <Button asChild className="mt-5 min-h-11 w-full animate-pulse-glow">
