@@ -1,9 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { Activity, LayoutDashboard, LogOut, ScanFace, Settings } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  Activity,
+  LayoutDashboard,
+  LogOut,
+  ScanFace,
+  Settings,
+  ShieldCheck,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { amIAdmin } from "@/lib/admin.functions";
 
 const LINKS = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -11,9 +20,19 @@ const LINKS = [
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
+
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const checkAdmin = useServerFn(amIAdmin);
+  const { data: adminData } = useQuery({
+    queryKey: ["me", "isAdmin"],
+    queryFn: () => checkAdmin({}),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -44,6 +63,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <span className="hidden sm:inline">{label}</span>
                 </Link>
               ))}
+              {adminData?.isAdmin ? (
+                <Link
+                  to="/admin"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  activeProps={{ className: "bg-secondary text-primary" }}
+                >
+                  <ShieldCheck className="size-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Link>
+              ) : null}
+
               <Button
                 variant="ghost"
                 size="icon"

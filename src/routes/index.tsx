@@ -116,11 +116,19 @@ function Landing() {
           className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
           <Button asChild size="lg" className="min-h-11 w-full animate-pulse-glow sm:w-auto">
-            <Link to={session ? "/scan" : "/auth"} search={session ? undefined : { mode: "signup" }}>
-              <ScanFace aria-hidden="true" />
-              Start scan
-            </Link>
+            {session ? (
+              <Link to="/scan">
+                <ScanFace aria-hidden="true" />
+                Start scan
+              </Link>
+            ) : (
+              <Link to="/auth" search={{ mode: "signup" }}>
+                <ScanFace aria-hidden="true" />
+                Start scan
+              </Link>
+            )}
           </Button>
+
           <Button asChild variant="outline" size="lg" className="min-h-11 w-full sm:w-auto">
             <Link to="/auth" search={{ mode: "login" }}>
               I already have an account
