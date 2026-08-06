@@ -6,7 +6,7 @@ Copy everything below into Lovable as your project prompt (or paste it into an e
 
 ---
 
-## PROMPT START
+title
 
 Build a full-stack web app called **NeuroFace AI** — a facial stress & wellness signal screening tool that uses the device camera and real-time facial landmark detection to estimate stress level and general wellness indicators. Position it clearly as an **educational/wellness screening tool, not a medical diagnostic device** — include a visible disclaimer on the scan and results screens.
 
@@ -110,22 +110,20 @@ Enable Row Level Security on all tables so users can only read/write their own r
 
 ---
 
-### Notes for your mini-project writeup
 - **Domain fit:** Emerging Trends in Machine Learning (computer vision — MediaPipe face landmark model) or Emerging Technologies (PWA + real-time browser ML)
 - **SDG angle:** SDG 3 (Good Health & Well-Being — stress awareness), SDG 9 (Industry, Innovation & Infrastructure — browser-based real-time ML), SDG 4 (Quality Education — if framed as an awareness/educational tool)
 - Be upfront with your guide that the "health" signals are **approximate, camera-derived proxies**, not clinically validated measurements — this is important to state in your abstract's limitations section to avoid overclaiming.
 
 This project was built with [Lovable](https://lovable.dev).
 
+
+
+
 **Live app**: https://aineurofacedetection.lovable.app
 
-## Build with Lovable
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/45c58125-2d49-4955-8c6d-93e143c60355).
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
 
 ## Development
 
