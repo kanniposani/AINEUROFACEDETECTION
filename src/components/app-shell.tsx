@@ -63,6 +63,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <span className="hidden sm:inline">{label}</span>
                 </Link>
               ))}
+              {adminData?.isAdmin ? (
+                <Link
+                  to="/admin"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  activeProps={{ className: "bg-secondary text-primary" }}
+                >
+                  <ShieldCheck className="size-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Link>
+              ) : null}
+
               <Button
                 variant="ghost"
                 size="icon"
