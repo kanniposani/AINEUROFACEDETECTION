@@ -24,6 +24,15 @@ const LINKS = [
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const checkAdmin = useServerFn(amIAdmin);
+  const { data: adminData } = useQuery({
+    queryKey: ["me", "isAdmin"],
+    queryFn: () => checkAdmin({}),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
