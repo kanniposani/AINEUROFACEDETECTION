@@ -162,6 +162,25 @@ function Landing() {
         <Disclaimer />
       </section>
 
+      <section className="relative mx-auto w-full max-w-4xl px-4 pb-20">
+        <GlassCard className="text-center">
+          <h2 className="text-2xl font-bold tracking-tight">About me</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            I'm a builder and wellness-tech enthusiast who created NeuroFace AI to make biometric
+            self-awareness more accessible. I believe small, measurable signals — like the tension
+            we hold in our face — can help people notice stress earlier and build healthier habits.
+          </p>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            This project combines computer vision, transparent scoring, and privacy-first design. It
+            is intentionally an educational tool: a way to explore how machine perception can
+            support, not replace, your own sense of wellbeing.
+          </p>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Got feedback or ideas? I'd love to hear from you.
+          </p>
+        </GlassCard>
+      </section>
+
       <footer className="relative border-t border-border py-6 text-center text-xs text-muted-foreground">
         NeuroFace AI · educational wellness screening · built for awareness, not diagnosis
       </footer>
