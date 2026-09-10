@@ -388,15 +388,40 @@ function ScanPage() {
           )}
 
           {live && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="absolute inset-x-3 bottom-3 rounded-xl bg-background/70 px-3 py-2 text-center text-sm backdrop-blur"
-            >
-              {phase === "capturing" ? "Analyzing signals — hold still" : guidance}
+            <div className="absolute inset-x-3 bottom-3 space-y-2">
+              <div className="grid grid-cols-4 gap-2 rounded-xl bg-background/70 p-2 backdrop-blur">
+                {(
+                  [
+                    ["Brow", liveSignals.brow],
+                    ["Jaw", liveSignals.jaw],
+                    ["Squint", liveSignals.squint],
+                    ["Blink", liveSignals.blink],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div key={label} aria-hidden="true">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-[width] duration-75"
+                        style={{ width: `${Math.round(Math.min(1, value) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="mt-1 block text-center font-mono text-[10px] text-muted-foreground">
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-xl bg-background/70 px-3 py-2 text-center text-sm backdrop-blur"
+              >
+                {phase === "capturing" ? "Analyzing signals — hold still" : guidance}
+              </div>
             </div>
           )}
         </div>
+
 
         {phase === "capturing" && (
           <div className="h-1.5 w-full bg-muted">
