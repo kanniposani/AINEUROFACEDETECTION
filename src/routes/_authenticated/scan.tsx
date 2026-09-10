@@ -275,6 +275,20 @@ function ScanPage() {
   }, [finish, setPhaseBoth, stopAll]);
 
   const beginCountdown = useCallback(() => {
+    // lock in this face's neutral rest level so the scan measures the *change*
+    const win = neutralRef.current;
+    if (win.length >= 15) {
+      const med = (pick: (s: (typeof win)[number]) => number) => {
+        const xs = win.map(pick).sort((a, b) => a - b);
+        return xs[Math.floor(xs.length / 2)]!;
+      };
+      baselineRef.current = {
+        brow: med((s) => s.brow),
+        jaw: med((s) => s.jaw),
+        squint: med((s) => s.squint),
+        asym: med((s) => s.asym),
+      };
+    }
     setPhaseBoth("countdown");
     setCountdown(3);
     let n = 3;
