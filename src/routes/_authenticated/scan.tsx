@@ -119,6 +119,12 @@ function ScanPage() {
     samplesRef.current = [];
     captureStartRef.current = null;
     lastTsRef.current = -1;
+    emaRef.current = {};
+    neutralRef.current = [];
+    baselineRef.current = null;
+    skinVarRef.current = 0;
+    frameNoRef.current = 0;
+
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
