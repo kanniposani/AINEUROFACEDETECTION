@@ -141,6 +141,15 @@ function ScanPage() {
       if (!scratchRef.current) scratchRef.current = document.createElement("canvas");
       setPhaseBoth("aligning");
 
+      const meshColor =
+        getComputedStyle(document.documentElement).getPropertyValue("--neon-cyan").trim() ||
+        "#00F5FF";
+      const say = (msg: string) => {
+        if (guidanceRef.current === msg) return;
+        guidanceRef.current = msg;
+        setGuidance(msg);
+      };
+
       const loop = () => {
         const v = videoRef.current;
         const canvas = canvasRef.current;
