@@ -153,52 +153,79 @@ function ScanPage() {
         const ctx = canvas.getContext("2d");
 
         const ts = performance.now();
-        if (ts <= lastTsRef.current) {
+        // hold a steady ~30 detections/sec: faster than the model is useful for
+        // is wasted work, and starving the loop is what made signals jumpy
+        if (ts - lastTsRef.current < 32) {
           rafRef.current = requestAnimationFrame(loop);
           return;
         }
         lastTsRef.current = ts;
+        frameNoRef.current += 1;
 
         const result = landmarker.detectForVideo(v, ts);
         const face = result.faceLandmarks?.[0];
 
         if (ctx) {
           if (face) {
-            drawMesh(
-              ctx,
-              face,
-              canvas.width,
-              canvas.height,
-              getComputedStyle(document.documentElement).getPropertyValue("--neon-cyan").trim() ||
-                "#00F5FF",
-            );
+            drawMesh(ctx, face, canvas.width, canvas.height, meshColor);
           } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
           }
         }
 
         if (!face) {
-          setGuidance("No face detected — center your face in the frame");
+          say("No face detected — center your face in the frame");
         } else {
           const nose = face[1]!;
           const offX = Math.abs(nose.x - 0.5);
           const offY = Math.abs(nose.y - 0.5);
           const shapes = result.faceBlendshapes?.[0]?.categories ?? [];
           const map = toBlendshapeMap(shapes);
-          const skinVar = skinVarianceSignal(v, scratchRef.current!, face);
 
-          if (offX > 0.14 || offY > 0.16) setGuidance("Center your face in the frame");
-          else if (skinVar < 0.03) setGuidance("Ensure good, even lighting on your face");
-          else setGuidance("Great — hold still and breathe normally");
+          // luminance sampling is expensive — every 5th frame is plenty
+          if (frameNoRef.current % 5 === 1) {
+            skinVarRef.current = skinVarianceSignal(v, scratchRef.current!, face);
+          }
+          const skinVar = skinVarRef.current;
+
+          const blink = blinkSignal(map); // raw: blinks are fast, never smooth them
+          const ema = emaRef.current;
+          ema.brow = smooth(ema.brow, browSignal(map));
+          ema.jaw = smooth(ema.jaw, jawSignal(map));
+          ema.squint = smooth(ema.squint, squintSignal(map));
+          ema.asym = smooth(ema.asym, asymmetrySignal(map), 0.2);
+
+          const centered = offX <= 0.14 && offY <= 0.16;
+
+          if (!centered) say("Center your face in the frame");
+          else if (skinVar < 0.03) say("Ensure good, even lighting on your face");
+          else if (phaseRef.current === "aligning")
+            say("Great — relax your face for a moment while we calibrate");
+          else say("Hold still and breathe normally");
+
+          // rolling neutral window (last ~2s of aligned, non-blinking frames)
+          if (phaseRef.current === "aligning" && centered && blink < 0.4) {
+            neutralRef.current.push({
+              brow: ema.brow!,
+              jaw: ema.jaw!,
+              squint: ema.squint!,
+              asym: ema.asym!,
+            });
+            if (neutralRef.current.length > 60) neutralRef.current.shift();
+          }
+
+          liveRef.current = { brow: ema.brow!, jaw: ema.jaw!, squint: ema.squint!, blink };
+          if (frameNoRef.current % 4 === 0) setLiveSignals({ ...liveRef.current });
 
           if (phaseRef.current === "capturing") {
+            const base = baselineRef.current;
             samplesRef.current.push({
               t: ts,
-              blink: blinkSignal(map),
-              brow: browSignal(map),
-              jaw: jawSignal(map),
-              squint: squintSignal(map),
-              asym: asymmetrySignal(map),
+              blink,
+              brow: base ? aboveBaseline(ema.brow!, base.brow) : ema.brow!,
+              jaw: base ? aboveBaseline(ema.jaw!, base.jaw) : ema.jaw!,
+              squint: base ? aboveBaseline(ema.squint!, base.squint) : ema.squint!,
+              asym: base ? Math.max(0, ema.asym! - base.asym * 0.6) : ema.asym!,
               skinVar,
             });
           }
