@@ -65,6 +65,17 @@ function ScanPage() {
   const captureStartRef = useRef<number | null>(null);
   const lastTsRef = useRef(-1);
   const phaseRef = useRef<Phase>("idle");
+  /** smoothed signal state (EMA) */
+  const emaRef = useRef<{ brow?: number; jaw?: number; squint?: number; asym?: number }>({});
+  /** rolling neutral window collected while aligning */
+  const neutralRef = useRef<{ brow: number; jaw: number; squint: number; asym: number }[]>([]);
+  const baselineRef = useRef<{ brow: number; jaw: number; squint: number; asym: number } | null>(
+    null,
+  );
+  const skinVarRef = useRef(0);
+  const frameNoRef = useRef(0);
+  const guidanceRef = useRef("");
+  const liveRef = useRef({ brow: 0, jaw: 0, squint: 0, blink: 0 });
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [guidance, setGuidance] = useState("Center your face in the frame");
@@ -72,6 +83,7 @@ function ScanPage() {
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [consentOpen, setConsentOpen] = useState(false);
+  const [liveSignals, setLiveSignals] = useState({ brow: 0, jaw: 0, squint: 0, blink: 0 });
 
   const setPhaseBoth = useCallback((p: Phase) => {
     phaseRef.current = p;
