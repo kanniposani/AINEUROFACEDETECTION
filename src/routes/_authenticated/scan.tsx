@@ -16,6 +16,7 @@ import { Disclaimer } from "@/components/disclaimer";
 import { FormulaPanel } from "@/components/formula-panel";
 import { computeMetrics, type FrameSample, type ScanMetrics } from "@/lib/scoring";
 import {
+  aboveBaseline,
   asymmetrySignal,
   blinkSignal,
   browSignal,
@@ -23,6 +24,7 @@ import {
   jawSignal,
   loadFaceLandmarker,
   skinVarianceSignal,
+  smooth,
   squintSignal,
   toBlendshapeMap,
 } from "@/lib/face-mesh";
