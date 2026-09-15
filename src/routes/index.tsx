@@ -66,7 +66,7 @@ function Landing() {
             <>
               <Button asChild variant="ghost" size="sm" className="min-h-11">
                 <Link to="/auth" search={{ mode: "login" }}>
-                  Log in
+                  Sign in
                 </Link>
               </Button>
               <Button asChild size="sm" className="min-h-11">
