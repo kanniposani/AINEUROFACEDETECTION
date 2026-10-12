@@ -8,6 +8,13 @@
       "when": 1789453044408,
       "tag": "0000_change_admin_email",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791796913635,
+      "tag": "0001_emergency_contact",
+      "breakpoints": true
     }
   ]
 }
