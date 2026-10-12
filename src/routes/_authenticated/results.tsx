@@ -71,7 +71,7 @@ function ResultsPage() {
       });
       if (error) throw error;
       const { checkAndSendEmergencyAlert } = await import("@/lib/emergency-alert");
-      const name = (userData.user.user_metadata?.full_name as string | undefined) ?? null;
+      const name = (userData.user.user_metadata?.['full_name'] as string | undefined) ?? null;
       return checkAndSendEmergencyAlert(userData.user.id, name).catch(() => false);
     },
     onSuccess: (alerted) => {
