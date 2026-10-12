@@ -81,25 +81,42 @@ export function toBlendshapeMap(
 
 const g = (m: BlendshapeMap, k: string) => m[k] ?? 0;
 
+/**
+ * Brow tension. Only *lowering* / inner-brow knitting counts as tension —
+ * outer-brow raise is surprise, not stress, so it is no longer mixed in
+ * (that cancellation was blurring real brow activity).
+ */
 export function browSignal(m: BlendshapeMap) {
-  return Math.min(
-    1,
-    (g(m, "browDownLeft") + g(m, "browDownRight")) / 2 +
-      (g(m, "browInnerUp") * 0.5 + (g(m, "browOuterUpLeft") + g(m, "browOuterUpRight")) / 4) * 0.5,
-  );
+  const down = (g(m, "browDownLeft") + g(m, "browDownRight")) / 2;
+  const knit = g(m, "browInnerUp");
+  return Math.min(1, down * 0.8 + knit * 0.35);
 }
 
 export function jawSignal(m: BlendshapeMap) {
-  return Math.min(
-    1,
-    (g(m, "mouthPressLeft") + g(m, "mouthPressRight")) / 2 +
-      g(m, "jawForward") * 0.5 +
-      (g(m, "mouthFrownLeft") + g(m, "mouthFrownRight")) / 4,
-  );
+  const press = (g(m, "mouthPressLeft") + g(m, "mouthPressRight")) / 2;
+  const frown = (g(m, "mouthFrownLeft") + g(m, "mouthFrownRight")) / 2;
+  const tighten = Math.max(g(m, "mouthShrugLower"), g(m, "mouthStretchLeft"), g(m, "mouthStretchRight"));
+  // an open/talking mouth is not a clench — discount it
+  const open = Math.max(g(m, "jawOpen"), g(m, "mouthFunnel"));
+  const raw = press * 0.6 + frown * 0.3 + g(m, "jawForward") * 0.3 + tighten * 0.2;
+  return Math.min(1, Math.max(0, raw * (1 - Math.min(1, open * 1.2))));
 }
 
 export function squintSignal(m: BlendshapeMap) {
-  return Math.min(1, (g(m, "eyeSquintLeft") + g(m, "eyeSquintRight")) / 2);
+  const squint = (g(m, "eyeSquintLeft") + g(m, "eyeSquintRight")) / 2;
+  const lidDroop = 1 - Math.min(1, (g(m, "eyeWideLeft") + g(m, "eyeWideRight")) / 2 + 0.5) + 0.5;
+  return Math.min(1, squint * 0.85 + (g(m, "cheekSquintLeft") + g(m, "cheekSquintRight")) / 2 * 0.15) * lidDroop;
+}
+
+/** Exponential moving average — smooths per-frame blendshape jitter. */
+export function smooth(prev: number | undefined, next: number, alpha = 0.35) {
+  return prev === undefined ? next : prev + alpha * (next - prev);
+}
+
+/** Subtract a per-face neutral baseline; expression is the rise above rest. */
+export function aboveBaseline(value: number, baseline: number) {
+  const b = Math.min(0.9, baseline);
+  return Math.min(1, Math.max(0, (value - b) / (1 - b)));
 }
 
 export function blinkSignal(m: BlendshapeMap) {

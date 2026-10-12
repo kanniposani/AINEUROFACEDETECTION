@@ -16,6 +16,7 @@ import { Disclaimer } from "@/components/disclaimer";
 import { FormulaPanel } from "@/components/formula-panel";
 import { computeMetrics, type FrameSample, type ScanMetrics } from "@/lib/scoring";
 import {
+  aboveBaseline,
   asymmetrySignal,
   blinkSignal,
   browSignal,
@@ -23,6 +24,7 @@ import {
   jawSignal,
   loadFaceLandmarker,
   skinVarianceSignal,
+  smooth,
   squintSignal,
   toBlendshapeMap,
 } from "@/lib/face-mesh";
@@ -63,6 +65,17 @@ function ScanPage() {
   const captureStartRef = useRef<number | null>(null);
   const lastTsRef = useRef(-1);
   const phaseRef = useRef<Phase>("idle");
+  /** smoothed signal state (EMA) */
+  const emaRef = useRef<{ brow?: number; jaw?: number; squint?: number; asym?: number }>({});
+  /** rolling neutral window collected while aligning */
+  const neutralRef = useRef<{ brow: number; jaw: number; squint: number; asym: number }[]>([]);
+  const baselineRef = useRef<{ brow: number; jaw: number; squint: number; asym: number } | null>(
+    null,
+  );
+  const skinVarRef = useRef(0);
+  const frameNoRef = useRef(0);
+  const guidanceRef = useRef("");
+  const liveRef = useRef({ brow: 0, jaw: 0, squint: 0, blink: 0 });
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [guidance, setGuidance] = useState("Center your face in the frame");
@@ -70,6 +83,7 @@ function ScanPage() {
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [consentOpen, setConsentOpen] = useState(false);
+  const [liveSignals, setLiveSignals] = useState({ brow: 0, jaw: 0, squint: 0, blink: 0 });
 
   const setPhaseBoth = useCallback((p: Phase) => {
     phaseRef.current = p;
@@ -105,6 +119,12 @@ function ScanPage() {
     samplesRef.current = [];
     captureStartRef.current = null;
     lastTsRef.current = -1;
+    emaRef.current = {};
+    neutralRef.current = [];
+    baselineRef.current = null;
+    skinVarRef.current = 0;
+    frameNoRef.current = 0;
+
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -121,6 +141,15 @@ function ScanPage() {
       if (!scratchRef.current) scratchRef.current = document.createElement("canvas");
       setPhaseBoth("aligning");
 
+      const meshColor =
+        getComputedStyle(document.documentElement).getPropertyValue("--neon-cyan").trim() ||
+        "#00F5FF";
+      const say = (msg: string) => {
+        if (guidanceRef.current === msg) return;
+        guidanceRef.current = msg;
+        setGuidance(msg);
+      };
+
       const loop = () => {
         const v = videoRef.current;
         const canvas = canvasRef.current;
@@ -133,52 +162,79 @@ function ScanPage() {
         const ctx = canvas.getContext("2d");
 
         const ts = performance.now();
-        if (ts <= lastTsRef.current) {
+        // hold a steady ~30 detections/sec: faster than the model is useful for
+        // is wasted work, and starving the loop is what made signals jumpy
+        if (ts - lastTsRef.current < 32) {
           rafRef.current = requestAnimationFrame(loop);
           return;
         }
         lastTsRef.current = ts;
+        frameNoRef.current += 1;
 
         const result = landmarker.detectForVideo(v, ts);
         const face = result.faceLandmarks?.[0];
 
         if (ctx) {
           if (face) {
-            drawMesh(
-              ctx,
-              face,
-              canvas.width,
-              canvas.height,
-              getComputedStyle(document.documentElement).getPropertyValue("--neon-cyan").trim() ||
-                "#00F5FF",
-            );
+            drawMesh(ctx, face, canvas.width, canvas.height, meshColor);
           } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
           }
         }
 
         if (!face) {
-          setGuidance("No face detected — center your face in the frame");
+          say("No face detected — center your face in the frame");
         } else {
           const nose = face[1]!;
           const offX = Math.abs(nose.x - 0.5);
           const offY = Math.abs(nose.y - 0.5);
           const shapes = result.faceBlendshapes?.[0]?.categories ?? [];
           const map = toBlendshapeMap(shapes);
-          const skinVar = skinVarianceSignal(v, scratchRef.current!, face);
 
-          if (offX > 0.14 || offY > 0.16) setGuidance("Center your face in the frame");
-          else if (skinVar < 0.03) setGuidance("Ensure good, even lighting on your face");
-          else setGuidance("Great — hold still and breathe normally");
+          // luminance sampling is expensive — every 5th frame is plenty
+          if (frameNoRef.current % 5 === 1) {
+            skinVarRef.current = skinVarianceSignal(v, scratchRef.current!, face);
+          }
+          const skinVar = skinVarRef.current;
+
+          const blink = blinkSignal(map); // raw: blinks are fast, never smooth them
+          const ema = emaRef.current;
+          ema.brow = smooth(ema.brow, browSignal(map));
+          ema.jaw = smooth(ema.jaw, jawSignal(map));
+          ema.squint = smooth(ema.squint, squintSignal(map));
+          ema.asym = smooth(ema.asym, asymmetrySignal(map), 0.2);
+
+          const centered = offX <= 0.14 && offY <= 0.16;
+
+          if (!centered) say("Center your face in the frame");
+          else if (skinVar < 0.03) say("Ensure good, even lighting on your face");
+          else if (phaseRef.current === "aligning")
+            say("Great — relax your face for a moment while we calibrate");
+          else say("Hold still and breathe normally");
+
+          // rolling neutral window (last ~2s of aligned, non-blinking frames)
+          if (phaseRef.current === "aligning" && centered && blink < 0.4) {
+            neutralRef.current.push({
+              brow: ema.brow!,
+              jaw: ema.jaw!,
+              squint: ema.squint!,
+              asym: ema.asym!,
+            });
+            if (neutralRef.current.length > 60) neutralRef.current.shift();
+          }
+
+          liveRef.current = { brow: ema.brow!, jaw: ema.jaw!, squint: ema.squint!, blink };
+          if (frameNoRef.current % 4 === 0) setLiveSignals({ ...liveRef.current });
 
           if (phaseRef.current === "capturing") {
+            const base = baselineRef.current;
             samplesRef.current.push({
               t: ts,
-              blink: blinkSignal(map),
-              brow: browSignal(map),
-              jaw: jawSignal(map),
-              squint: squintSignal(map),
-              asym: asymmetrySignal(map),
+              blink,
+              brow: base ? aboveBaseline(ema.brow!, base.brow) : ema.brow!,
+              jaw: base ? aboveBaseline(ema.jaw!, base.jaw) : ema.jaw!,
+              squint: base ? aboveBaseline(ema.squint!, base.squint) : ema.squint!,
+              asym: base ? Math.max(0, ema.asym! - base.asym * 0.6) : ema.asym!,
               skinVar,
             });
           }
@@ -219,6 +275,20 @@ function ScanPage() {
   }, [finish, setPhaseBoth, stopAll]);
 
   const beginCountdown = useCallback(() => {
+    // lock in this face's neutral rest level so the scan measures the *change*
+    const win = neutralRef.current;
+    if (win.length >= 15) {
+      const med = (pick: (s: (typeof win)[number]) => number) => {
+        const xs = win.map(pick).sort((a, b) => a - b);
+        return xs[Math.floor(xs.length / 2)]!;
+      };
+      baselineRef.current = {
+        brow: med((s) => s.brow),
+        jaw: med((s) => s.jaw),
+        squint: med((s) => s.squint),
+        asym: med((s) => s.asym),
+      };
+    }
     setPhaseBoth("countdown");
     setCountdown(3);
     let n = 3;
@@ -318,15 +388,40 @@ function ScanPage() {
           )}
 
           {live && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="absolute inset-x-3 bottom-3 rounded-xl bg-background/70 px-3 py-2 text-center text-sm backdrop-blur"
-            >
-              {phase === "capturing" ? "Analyzing signals — hold still" : guidance}
+            <div className="absolute inset-x-3 bottom-3 space-y-2">
+              <div className="grid grid-cols-4 gap-2 rounded-xl bg-background/70 p-2 backdrop-blur">
+                {(
+                  [
+                    ["Brow", liveSignals.brow],
+                    ["Jaw", liveSignals.jaw],
+                    ["Squint", liveSignals.squint],
+                    ["Blink", liveSignals.blink],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div key={label} aria-hidden="true">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-[width] duration-75"
+                        style={{ width: `${Math.round(Math.min(1, value) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="mt-1 block text-center font-mono text-[10px] text-muted-foreground">
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-xl bg-background/70 px-3 py-2 text-center text-sm backdrop-blur"
+              >
+                {phase === "capturing" ? "Analyzing signals — hold still" : guidance}
+              </div>
             </div>
           )}
         </div>
+
 
         {phase === "capturing" && (
           <div className="h-1.5 w-full bg-muted">

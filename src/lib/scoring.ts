@@ -101,8 +101,10 @@ export function computeMetrics(samples: FrameSample[]): ScanMetrics {
         : 0,
   );
 
-  const tensionLevel = clamp((browTension * 0.55 + jawTension * 0.45) * 145);
-  const fatigueLevel = clamp(squintAvg * 55 + blinkDeviation * 0.3 + skinVariance * 22);
+  // signals now arrive relative to the person's neutral rest level, so the
+  // gains are a little higher than the raw-blendshape version
+  const tensionLevel = clamp((browTension * 0.55 + jawTension * 0.45) * 175);
+  const fatigueLevel = clamp(squintAvg * 68 + blinkDeviation * 0.3 + skinVariance * 20);
   const symmetryScore = clamp(100 - asymmetryAvg * 260);
 
   const stressIndex = clamp(

@@ -73,7 +73,7 @@ SET search_path = public
 AS $$
 BEGIN
   IF NEW.email_confirmed_at IS NOT NULL
-     AND lower(NEW.email) = 'kanniposani@gmail.com' THEN
+     AND lower(NEW.email) = 'udaykiran.posani@gmail.com' THEN
     INSERT INTO public.user_roles (user_id, role)
     VALUES (NEW.id, 'admin')
     ON CONFLICT (user_id, role) DO NOTHING;
@@ -97,5 +97,5 @@ EXECUTE FUNCTION public.grant_root_admin();
 -- Backfill for the existing account, if already confirmed
 INSERT INTO public.user_roles (user_id, role)
 SELECT id, 'admin' FROM auth.users
-WHERE lower(email) = 'kanniposani@gmail.com' AND email_confirmed_at IS NOT NULL
+WHERE lower(email) = 'udaykiran.posani@gmail.com' AND email_confirmed_at IS NOT NULL
 ON CONFLICT (user_id, role) DO NOTHING;

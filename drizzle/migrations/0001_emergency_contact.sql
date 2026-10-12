@@ -1,0 +1,1 @@
+ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS emergency_name text, ADD COLUMN IF NOT EXISTS emergency_phone text, ADD COLUMN IF NOT EXISTS emergency_alert_enabled boolean NOT NULL DEFAULT false;

@@ -66,7 +66,7 @@ function Landing() {
             <>
               <Button asChild variant="ghost" size="sm" className="min-h-11">
                 <Link to="/auth" search={{ mode: "login" }}>
-                  Log in
+                  Sign in
                 </Link>
               </Button>
               <Button asChild size="sm" className="min-h-11">
@@ -115,25 +115,27 @@ function Landing() {
           transition={{ delay: 0.18 }}
           className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
-          <Button asChild size="lg" className="min-h-11 w-full animate-pulse-glow sm:w-auto">
-            {session ? (
+          {session ? (
+            <Button asChild size="lg" className="min-h-11 w-full animate-pulse-glow sm:w-auto">
               <Link to="/scan">
                 <ScanFace aria-hidden="true" />
                 Start scan
               </Link>
-            ) : (
-              <Link to="/auth" search={{ mode: "signup" }}>
-                <ScanFace aria-hidden="true" />
-                Start scan
-              </Link>
-            )}
-          </Button>
-
-          <Button asChild variant="outline" size="lg" className="min-h-11 w-full sm:w-auto">
-            <Link to="/auth" search={{ mode: "login" }}>
-              I already have an account
-            </Link>
-          </Button>
+            </Button>
+          ) : (
+            <>
+              <Button asChild size="lg" className="min-h-11 w-full animate-pulse-glow sm:w-auto">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Sign up
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="min-h-11 w-full sm:w-auto">
+                <Link to="/auth" search={{ mode: "login" }}>
+                  Sign in
+                </Link>
+              </Button>
+            </>
+          )}
         </motion.div>
 
         <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
@@ -174,8 +176,8 @@ function Landing() {
         <GlassCard className="text-center">
           <h2 className="text-2xl font-bold tracking-tight">About Us</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            I'm a builder and wellness-tech enthusiast who created NeuroFace AI to make biometric
-            self-awareness more accessible. I believe small, measurable signals — like the tension
+            We are builders and wellness-tech enthusiasts who created NeuroFace AI to make biometric
+            self-awareness more accessible. We believe small, measurable signals — like the tension
             we hold in our face — can help people notice stress earlier and build healthier habits.
           </p>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
