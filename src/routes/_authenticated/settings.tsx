@@ -66,6 +66,9 @@ function SettingsPage() {
   const [notes, setNotes] = useState("");
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState("09:00");
+  const [ecName, setEcName] = useState("");
+  const [ecPhone, setEcPhone] = useState("");
+  const [ecEnabled, setEcEnabled] = useState(false);
 
   const profileQuery = useQuery({
     queryKey: ["profile-settings"],
@@ -91,6 +94,9 @@ function SettingsPage() {
     setNotes(d.profile?.baseline_notes ?? "");
     setReminderEnabled(d.settings?.reminder_enabled ?? false);
     setReminderTime((d.settings?.reminder_time ?? "09:00").slice(0, 5));
+    setEcName(d.settings?.emergency_name ?? "");
+    setEcPhone(d.settings?.emergency_phone ?? "");
+    setEcEnabled(d.settings?.emergency_alert_enabled ?? false);
   }, [profileQuery.data]);
 
   const save = useMutation({
@@ -109,6 +115,9 @@ function SettingsPage() {
         reminder_enabled: reminderEnabled,
         reminder_time: reminderTime,
         theme,
+        emergency_name: ecName.trim() || null,
+        emergency_phone: ecPhone.trim() || null,
+        emergency_alert_enabled: ecEnabled,
       });
       if (sErr) throw sErr;
     },
@@ -298,6 +307,36 @@ function SettingsPage() {
         >
           {save.isPending && <Loader2 className="animate-spin" aria-hidden="true" />}
           Save changes
+        </Button>
+      </GlassCard>
+
+      <GlassCard className="space-y-4">
+        <h2 className="text-base font-semibold">Emergency contact</h2>
+        <p className="text-sm text-muted-foreground">
+          If your Stress Index is 70 or higher on 3 saved scans in a row, WhatsApp opens with an
+          alert message ready for this contact.
+        </p>
+        <div className="space-y-1.5">
+          <Label htmlFor="ec-name">Contact name</Label>
+          <Input id="ec-name" maxLength={100} value={ecName} onChange={(e) => setEcName(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ec-phone">WhatsApp number (with country code)</Label>
+          <Input
+            id="ec-phone"
+            type="tel"
+            placeholder="+91 98765 43210"
+            maxLength={20}
+            value={ecPhone}
+            onChange={(e) => setEcPhone(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="ec-on" className="font-normal">Send automatic alerts</Label>
+          <Switch id="ec-on" checked={ecEnabled} onCheckedChange={setEcEnabled} aria-label="Send automatic alerts" />
+        </div>
+        <Button className="min-h-11 w-full" onClick={() => save.mutate()} disabled={save.isPending}>
+          Save contact
         </Button>
       </GlassCard>
 
