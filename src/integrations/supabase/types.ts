@@ -76,18 +76,27 @@ export type Database = {
       }
       settings: {
         Row: {
+          emergency_alert_enabled: boolean
+          emergency_name: string | null
+          emergency_phone: string | null
           reminder_enabled: boolean
           reminder_time: string
           theme: string
           user_id: string
         }
         Insert: {
+          emergency_alert_enabled?: boolean
+          emergency_name?: string | null
+          emergency_phone?: string | null
           reminder_enabled?: boolean
           reminder_time?: string
           theme?: string
           user_id: string
         }
         Update: {
+          emergency_alert_enabled?: boolean
+          emergency_name?: string | null
+          emergency_phone?: string | null
           reminder_enabled?: boolean
           reminder_time?: string
           theme?: string

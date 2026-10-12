@@ -70,10 +70,14 @@ function ResultsPage() {
         raw_metrics: r.raw,
       });
       if (error) throw error;
+      const { checkAndSendEmergencyAlert } = await import("@/lib/emergency-alert");
+      const name = (userData.user.user_metadata?.['full_name'] as string | undefined) ?? null;
+      return checkAndSendEmergencyAlert(userData.user.id, name).catch(() => false);
     },
-    onSuccess: () => {
+    onSuccess: (alerted) => {
       setSaved(true);
       toast.success("Scan saved to your history");
+      if (alerted) toast.warning("High stress on several scans — your emergency contact is being alerted on WhatsApp.");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not save the scan"),
   });
