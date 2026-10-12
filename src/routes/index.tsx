@@ -172,7 +172,7 @@ function Landing() {
 
       <section className="relative mx-auto w-full max-w-4xl px-4 pb-20">
         <GlassCard className="text-center">
-          <h2 className="text-2xl font-bold tracking-tight">About me</h2>
+          <h2 className="text-2xl font-bold tracking-tight">About Us</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             I'm a builder and wellness-tech enthusiast who created NeuroFace AI to make biometric
             self-awareness more accessible. I believe small, measurable signals — like the tension
